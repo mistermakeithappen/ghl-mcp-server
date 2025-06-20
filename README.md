@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server that provides comprehensive integration with the GoHighLevel API v2. This server enables AI assistants to interact with GoHighLevel's CRM, marketing automation, and business management tools.
 
+<a href="https://glama.ai/mcp/servers/@mistermakeithappen/ghl-mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@mistermakeithappen/ghl-mcp-server/badge" alt="GoHighLevel Server MCP server" />
+</a>
+
 ## Features
 
 - 🚀 **Complete API Coverage**: Access to contacts, conversations, calendars, opportunities, payments, workflows, and more
