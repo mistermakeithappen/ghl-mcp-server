@@ -1,0 +1,20 @@
+{
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    }
+  ],
+  "env": {
+    "GHL_PRIVATE_TOKEN": "@ghl-private-token",
+    "GHL_CLIENT_ID": "@ghl-client-id",
+    "GHL_CLIENT_SECRET": "@ghl-client-secret",
+    "GHL_WEBHOOK_SECRET": "@ghl-webhook-secret"
+  }
+}

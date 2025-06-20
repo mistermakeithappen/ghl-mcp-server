@@ -1,0 +1,66 @@
+{
+  "name": "ghl-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for GoHighLevel API integration",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "vercel-build": "echo 'No build step required'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "vercel": "^32.0.0"
+  },
+  "bin": {
+    "ghl-mcp-server": "./index.js"
+  },
+  "mcp": {
+    "name": "GoHighLevel API",
+    "description": "Integrate with GoHighLevel CRM, marketing automation, and business management tools",
+    "version": "1.0.0",
+    "tools": {
+      "ghl_create_contact": {
+        "description": "Create a new contact in GoHighLevel"
+      },
+      "ghl_search_contacts": {
+        "description": "Search for contacts in GoHighLevel"
+      },
+      "ghl_send_message": {
+        "description": "Send SMS, Email, or WhatsApp message to a contact"
+      },
+      "ghl_create_appointment": {
+        "description": "Create a new appointment in a calendar"
+      },
+      "ghl_get_calendar_slots": {
+        "description": "Get available calendar time slots"
+      },
+      "ghl_create_opportunity": {
+        "description": "Create a new sales opportunity"
+      },
+      "ghl_search_opportunities": {
+        "description": "Search for opportunities in pipelines"
+      },
+      "ghl_add_contact_to_workflow": {
+        "description": "Add a contact to an automation workflow"
+      },
+      "ghl_create_order": {
+        "description": "Create a new payment order"
+      },
+      "ghl_get_transactions": {
+        "description": "Get payment transaction history"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
