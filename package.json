@@ -6,9 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js",
-    "vercel-build": "echo 'No build step required'",
-    "deploy": "vercel --prod"
+    "dev": "node --watch index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
@@ -17,8 +15,7 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "vercel": "^32.0.0"
+    "@types/node": "^20.10.0"
   },
   "bin": {
     "ghl-mcp-server": "./index.js"

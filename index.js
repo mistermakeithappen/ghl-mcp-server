@@ -2,6 +2,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import express from 'express';
 import dotenv from 'dotenv';
 import { GHLAPIClient } from './src/api-client.js';
 import { RateLimiter } from './src/rate-limiter.js';
@@ -17,60 +18,72 @@ import {
 
 dotenv.config();
 
+// Check if we're running in Railway or as a web service
+const PORT = process.env.PORT || 3000;
+const isWebService = !!process.env.PORT || process.env.RAILWAY_ENVIRONMENT;
+
 class GoHighLevelMCPServer {
   constructor() {
     this.rateLimiter = new RateLimiter();
     this.apiClient = new GHLAPIClient();
     
-    this.server = new Server({
-      name: 'ghl-mcp-server',
-      version: '1.0.0'
-    }, {
-      capabilities: {
-        tools: {}
-      }
-    });
-    
-    this.setupTools();
+    try {
+      this.server = new Server({
+        name: 'ghl-mcp-server',
+        version: '1.0.0'
+      }, {
+        capabilities: {
+          tools: {}
+        }
+      });
+      
+      this.setupTools();
+    } catch (error) {
+      console.error('Error initializing MCP server:', error);
+    }
   }
   
   setupTools() {
-    // List all available tools
-    this.server.setRequestHandler('tools/list', async () => ({
-      tools: [
-        ...contactTools,
-        ...conversationTools,
-        ...calendarTools,
-        ...opportunityTools,
-        ...paymentTools,
-        ...workflowTools
-      ]
-    }));
-    
-    // Execute tools
-    this.server.setRequestHandler('tools/execute', async (request) => {
-      const { name, arguments: args } = request.params;
+    try {
+      // List all available tools
+      this.server.setRequestHandler('tools/list', async () => ({
+        tools: [
+          ...contactTools,
+          ...conversationTools,
+          ...calendarTools,
+          ...opportunityTools,
+          ...paymentTools,
+          ...workflowTools
+        ]
+      }));
       
-      // Check rate limits
-      if (!this.rateLimiter.canMakeRequest(name)) {
-        throw new Error('Rate limit exceeded. Please try again later.');
-      }
-      
-      try {
-        // Validate required token
-        if (!args.token && !process.env.GHL_PRIVATE_TOKEN) {
-          throw new Error('Authentication token required. Provide token in arguments or set GHL_PRIVATE_TOKEN environment variable.');
+      // Execute tools
+      this.server.setRequestHandler('tools/execute', async (request) => {
+        const { name, arguments: args } = request.params;
+        
+        // Check rate limits
+        if (!this.rateLimiter.canMakeRequest(name)) {
+          throw new Error('Rate limit exceeded. Please try again later.');
         }
         
-        const token = args.token || process.env.GHL_PRIVATE_TOKEN;
-        const result = await this.executeGHLTool(name, { ...args, token });
-        
-        this.rateLimiter.recordRequest(name);
-        return result;
-      } catch (error) {
-        return ErrorHandler.handleAPIError(error, { resource: name });
-      }
-    });
+        try {
+          // Validate required token
+          if (!args.token && !process.env.GHL_PRIVATE_TOKEN) {
+            throw new Error('Authentication token required. Provide token in arguments or set GHL_PRIVATE_TOKEN environment variable.');
+          }
+          
+          const token = args.token || process.env.GHL_PRIVATE_TOKEN;
+          const result = await this.executeGHLTool(name, { ...args, token });
+          
+          this.rateLimiter.recordRequest(name);
+          return result;
+        } catch (error) {
+          return ErrorHandler.handleAPIError(error, { resource: name });
+        }
+      });
+    } catch (error) {
+      console.error('Error setting up tools:', error);
+    }
   }
   
   async executeGHLTool(toolName, args) {
@@ -145,12 +158,66 @@ class GoHighLevelMCPServer {
   }
   
   async start() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    console.error('GoHighLevel MCP Server started');
+    if (this.server) {
+      const transport = new StdioServerTransport();
+      await this.server.connect(transport);
+      console.error('GoHighLevel MCP Server started');
+    }
   }
 }
 
-// Start the server
-const server = new GoHighLevelMCPServer();
-server.start().catch(console.error);
+// If running as a web service (Railway, Vercel, etc.), provide HTTP endpoints
+if (isWebService) {
+  console.log('Running as web service on port', PORT);
+  
+  const app = express();
+  app.use(express.json());
+  
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'ok', 
+      service: 'GoHighLevel MCP Server',
+      mode: 'http',
+      version: '1.0.0'
+    });
+  });
+  
+  // Info endpoint
+  app.get('/', (req, res) => {
+    res.json({
+      name: 'GoHighLevel MCP Server',
+      description: 'MCP server for GoHighLevel API integration',
+      endpoints: {
+        health: '/health',
+        mcp: '/api/mcp',
+        rest: '/api/ghl/*'
+      },
+      documentation: 'https://github.com/mistermakeithappen/ghl-mcp-server'
+    });
+  });
+  
+  // Import and mount API routes
+  import('./examples/api-backend.js').then(module => {
+    app.use('/api/ghl', module.default);
+  }).catch(error => {
+    console.error('Error loading API routes:', error);
+  });
+  
+  // Import and mount MCP HTTP endpoint
+  import('./api/mcp.js').then(module => {
+    app.use('/api/mcp', module.default);
+  }).catch(error => {
+    console.error('Error loading MCP endpoint:', error);
+  });
+  
+  app.listen(PORT, () => {
+    console.log(`GoHighLevel MCP Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+  });
+} else {
+  // Running as traditional MCP server (CLI mode)
+  console.error('Starting in MCP CLI mode...');
+  const server = new GoHighLevelMCPServer();
+  server.start().catch(console.error);
+}
