@@ -241,4 +241,4 @@ MIT
 
 - [GoHighLevel API Documentation](https://highlevel.stoplight.io/docs/integrations)
 - [MCP Documentation](https://modelcontextprotocol.com)
-- [Issues](https://github.com/yourusername/ghl-mcp-server/issues)
+- [Issues](https://github.com/mistermakeithappen/ghl-mcp-server/issues)
