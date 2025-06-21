@@ -62,7 +62,7 @@ export class GHLAPIClient {
       locationId,
       ...(query && { query }),
       limit: limit.toString(),
-      offset: offset.toString()
+      ...(offset > 0 && { offset: offset.toString() })
     });
     
     const result = await this.makeRequest(`/contacts/?${params}`, 'GET', null, token);
@@ -73,7 +73,8 @@ export class GHLAPIClient {
         text: JSON.stringify({
           success: true,
           contacts: result.contacts || result,
-          total: result.total || result.length,
+          total: result.meta?.total || result.total || result.length,
+          meta: result.meta,
           page: Math.floor(offset / limit) + 1
         }, null, 2)
       }]
@@ -88,7 +89,7 @@ export class GHLAPIClient {
         type: 'text',
         text: JSON.stringify({
           success: true,
-          contact: contact.contact || contact
+          contact: contact
         }, null, 2)
       }]
     };
@@ -193,7 +194,7 @@ export class GHLAPIClient {
       ...(lastMessageId && { lastMessageId })
     });
     
-    const result = await this.makeRequest(`/conversations/?${params}`, 'GET', null, token);
+    const result = await this.makeRequest(`/conversations/search?${params}`, 'GET', null, token);
     
     return {
       content: [{
@@ -322,10 +323,10 @@ export class GHLAPIClient {
   
   async searchOpportunities({ locationId, pipelineId, query, assignedTo, token }) {
     const params = new URLSearchParams({
-      locationId,
       ...(pipelineId && { pipelineId }),
       ...(query && { query }),
-      ...(assignedTo && { assignedTo })
+      ...(assignedTo && { assignedTo }),
+      location_id: locationId
     });
     
     const result = await this.makeRequest(`/opportunities/search?${params}`, 'GET', null, token);
@@ -402,7 +403,8 @@ export class GHLAPIClient {
   
   async getTransactions({ locationId, contactId, startAfter, endBefore, token }) {
     const params = new URLSearchParams({
-      locationId,
+      altId: locationId,
+      altType: 'location',
       ...(contactId && { contactId }),
       ...(startAfter && { startAfter }),
       ...(endBefore && { endBefore })
@@ -424,7 +426,8 @@ export class GHLAPIClient {
   
   async getOrders({ locationId, contactId, startAfter, endBefore, token }) {
     const params = new URLSearchParams({
-      locationId,
+      altId: locationId,
+      altType: 'location',
       ...(contactId && { contactId }),
       ...(startAfter && { startAfter }),
       ...(endBefore && { endBefore })
